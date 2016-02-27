@@ -1,0 +1,47 @@
+<html>
+<head>
+</head>
+
+<body>
+
+
+<button id= "friendButton" onclick="changeNames()"> Click to see the next match!</button>
+	<div style="text-align: center;">
+
+<img id="userImage" src=""/>
+
+<span id="test"> </span>
+
+<script>
+function user(name, age, picture)
+{
+	this.name=name;
+	this.age=age;
+	this.picture=picture;
+}
+var johanna = new user("Johanna Malmstrom","18","http://mardaloopdoggiedaycare.com/wp-content/uploads/2014/12/cute-dog2.jpg");
+var bob = new user("Bob Smith","19","http://g-ecx.images-amazon.com/images/G/01/img15/pet-products/small-tiles/23695_pets_vertical_store_dogs_small_tile_8._CB312176604_.jpg");
+var alex = new user("Alex Williams","21","http://animaliaz-life.com/data_images/dog/dog6.jpg");
+var main = [johanna,bob,alex];
+document.getElementById("test").innerHTML=main[0]["name"];
+document.getElementById("userImage").src=main[0]["picture"];
+var count = 1;
+function changeNames()
+{
+	if(count<3)
+	{
+		document.getElementById("test").innerHTML=main[count]["name"];
+		document.getElementById("userImage").src=main[count]["picture"];
+		count++;
+	}
+	else
+	{
+		count=0;
+	}
+}
+</script>
+
+
+</body>
+
+</html>
