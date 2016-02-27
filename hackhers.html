@@ -1,0 +1,37 @@
+<html>
+<head>
+</head>
+
+<body>
+
+
+<button onclick="changeNames()"> Click to see the next match!</button>
+
+<span id="test"> </span>
+
+<script>
+
+var main = ["Johanna","Alex","Sam","Ryan", "Charlie"];
+//document.write(main[0]);
+document.getElementById("test").innerHTML=main[0];
+
+var count = 1;
+
+function changeNames()
+{
+	if(count<4)
+	{
+		document.getElementById("test").innerHTML=main[count];
+		count++;
+	}
+	else
+	{
+		count=0;
+	}
+}
+</script>
+
+
+</body>
+
+</html>
