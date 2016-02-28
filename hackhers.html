@@ -1,37 +1,275 @@
+<!-- 
+
+HackHers Hackaton at Cook Campus Center, Rutgers University
+Febuary 27 - 28th, 2016
+
+Team Members of 'netflix & chill':
+dkarivalis (David Karivalis)
+jpark-0 (Jin Park)
+jmalmstrom (Johanna Malmstrom)
+1handrade (Hannah Andrade)
+
+-->
+
+<!DOCTYPE html>
 <html>
 <head>
+	<title>netflix & chill</title>
 </head>
 
-<body>
+<body style="background-color:#37474F">
 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.39.min.js"></script>
+<script src="camera/webcam.js"></script>
 
-<button onclick="changeNames()"> Click to see the next match!</button>
+<div id="chill"></div>
 
-<span id="test"> </span>
+<div style="width:800px; height:500px; margin:0 auto; background-color:#512DA8">
+	<div id="my_camera"></div>
+	<div style="width:640px; height:360px; margin:0 auto;"><iframe id="player" src="https://jixifox.files.wordpress.com/2015/09/netflix-and-chill-meme-comedy.jpg" style="width:640px; height:360px;"></iframe></div></br>
+	<center><form action="demo_form.asp">
+		<span id = "nicknameSpan" style="font-family: 'Helvetica Neue'; font-size:20px">Nickname: </span>
+		<input type="text" name="fname" id="nickname" style="font-family: 'Helvetica Neue'; font-size:20px">
+	</form>
+
+	<button onclick="playNextVideo()" id="netflixButton" style="margin-top:30px; height: 30px; width:150px; font-family: 'Helvetica Neue'; font-size:20px">~netflix~</button>
+
+	<br><br><br><br>
+	<button onclick="matchUsers()" id="chillButton" style="margin-top:30px; height: 30px; width:150px; font-family: 'Helvetica Neue'; font-size:20px">~chill~</button>
+	</center>
+</div>
 
 <script>
 
-var main = ["Johanna","Alex","Sam","Ryan", "Charlie"];
-//document.write(main[0]);
-document.getElementById("test").innerHTML=main[0];
+	var snapshot;
+	var users = [];
 
-var count = 1;
 
-function changeNames()
-{
-	if(count<4)
-	{
-		document.getElementById("test").innerHTML=main[count];
-		count++;
+	/* 
+	* WebcamJS 
+	* https://github.com/jhuckaby/webcamjs
+	*/
+
+	Webcam.set({
+		width: 320,
+		height: 240,
+		image_format: 'jpeg',
+		jpeg_quality: 90
+	});
+	
+	Webcam.attach( '#my_camera'  );
+	document.getElementById("my_camera").style="position:absolute; left:-320px; top:0px;";
+
+	function take_snapshot() {
+
+		Webcam.snap( function(data_uri) {
+			snapshot = data_uri;
+			uploadToS3(data_uri);
+		} );
+
 	}
-	else
-	{
-		count=0;
+
+	function show_snapshot() {
+
+		document.getElementById('results').innerHTML = 
+				'<h2>Here is your image:</h2>' + 
+				'<img src="'+snapshots[counter++]+'"/>';
+
 	}
-}
+
+
+	/* 
+	* Microsoft Project Oxford Emotion API 
+	*/
+
+	function getHappinessLevel( image_url ) {
+
+		$.ajax({
+            url: "https://api.projectoxford.ai/emotion/v1.0/recognize",
+            beforeSend: function(xhrObj){
+                xhrObj.setRequestHeader("Content-Type","application/json");
+                xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","3ebc164263384c72a5ebc6ca559d27d8");
+            },
+            type: "POST",
+            data: "{ 'url':'"+image_url+"'}",
+	    	complete: function(response) {
+				obj = JSON.parse(response.responseText);
+				//alert(obj[0]["scores"]["happiness"]);
+				document.getElementById("player").src = "https://jixifox.files.wordpress.com/2015/09/netflix-and-chill-meme-comedy.jpg";
+
+				recordUser( obj[0]["scores"]["happiness"] );
+			}
+		})
+        .done(function(data) {
+            //alert("success");
+        })
+        .fail(function() {
+            alert("error");
+        });
+
+	}
+
+
+	/* 
+	* Verizon's Vidible Answers API
+	*/
+
+	videosCount = 3;
+
+	function playNextVideo() {
+
+		$.ajax({
+	        url: "http://api.vidible.tv/search?bcid=55646e21e4b0683bc61d6119&query=kittens&offset=1&limit=5&transcript=false",
+	        type: "GET",
+		    complete: function(response) {
+				obj = JSON.parse(response.responseText);
+				//alert(obj[0]["url"]);
+				//document.getElementById("player").style = "visibility: visible";
+				document.getElementById("player").src = obj[0]["url"];
+
+				setTimeout(take_snapshot, 10000);
+
+			}
+		})
+        .done(function(data) {
+            //alert("success");
+        })
+        .fail(function() {
+            alert("error");
+        });
+	}
+
+
+	/* 
+	* AWS S3 
+	*/
+
+	AWS.config.update({accessKeyId: 'AKIAJKXLCW37O7RGYVMA', secretAccessKey: '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'});
+	AWS.config.region = 'us-east-1';
+
+	function uploadToS3(data_uri) {
+		
+		var bucket = new AWS.S3({params: {Bucket: 'hackhers'}});
+	    var params = {Key: 'test.jpeg', ContentEncoding: 'base64', ContentType:'image/jpeg', Body: dataURItoBlob(data_uri)};
+
+		bucket.upload(params, function (err, data) {
+
+				getHappinessLevel( data.Location );
+
+		});
+
+	}
+
+	/*
+	* base64 -> blob helper method
+	* http://stackoverflow.com/questions/12883871/how-to-upload-base64-encoded-image-data-to-s3-using-javascript-only
+	*/
+
+	function dataURItoBlob(dataURI) {
+
+	    var binary = atob(dataURI.split(',')[1]);
+	    var array = [];
+	    for(var i = 0; i < binary.length; i++)
+	        array.push(binary.charCodeAt(i));
+
+	    return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
+
+	}
+
+	/*
+	* Models
+	*/
+
+	function user(name, happinessLevel, image) {
+
+		this.name = name;
+		this.happinessLevel = happinessLevel;
+		this.image = image;
+
+	}
+
+	function match(user1, user2) {
+
+		this.user1 = user1;
+		this.user2 = user2;
+
+	}
+
+	/*
+	* Controllers
+	*/
+
+	function recordUser( happinessLevel ) {
+
+		var newUser = new user( document.getElementById("nickname").value, happinessLevel, snapshot );
+		users.push(newUser);
+
+	}
+
+	/*
+	* ~chill~ aka the brute force matching algorithm
+	*/
+
+	function matchUsers() {
+
+		var matches = [];
+
+		users.forEach(function(user1) {
+
+			users.forEach(function(user2) {
+
+				if ( user1.name != user2.name ) { 
+
+					if ( Math.abs( user1.happinessLevel - user2.happinessLevel ) <= .2 ) {
+
+						var exists = false;
+
+						matches.forEach(function(match) {
+							if ( ( match.user1 == user1 && match.user2 == user2 ) || ( match.user1 == user2 && match.user2 == user1 ) ) {
+								exists = true;
+							}
+						});
+
+						if ( !exists ) {
+							var newMatch = new match( user1, user2 );
+							matches.push( newMatch );
+						}
+
+					}
+
+				}
+    		
+			});
+    		
+		});
+
+		matches.forEach(function(match) {
+
+			document.getElementById("player").style = "visibility: hidden";
+			document.getElementById("nickname").style = "visibility: hidden";
+			document.getElementById("netflixButton").style = "visibility: hidden";
+			document.getElementById("chillButton").style = "visibility: hidden";
+			document.getElementById("nicknameSpan").style = "visibility: hidden";
+
+			document.getElementById("chill").innerHTML = "super chill matching algorithm";
+
+			document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML 
+			+ "<br><br><div style='width:800px;'><div style='float:left'><img src='"+match.user1.image+"'/><br>"+match.user1.name+"<br>:) level: "+match.user1.happinessLevel+"</div><div style='margin-left:100px; float:left'><img src='"+match.user2.image+"'/><br>"+match.user2.name+"<br>:) level: "+match.user2.happinessLevel+"</div></div><br><br><br><br><br>";
+
+		});
+
+		users.forEach(function(user) {
+
+			document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML + "<br><br>"+user.name+"<br>:) level: "+user.happinessLevel+"<br><br>";
+
+		});
+
+	}
+
 </script>
 
 
-</body>
 
+</body>
 </html>
