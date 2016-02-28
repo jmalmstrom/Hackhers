@@ -23,7 +23,7 @@ jmalmstrom (Johanna Malmstrom)
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.39.min.js"></script>
 <script src="camera/webcam.js"></script>
 
-<div id="chill"></div>
+<div id="chill" style="color:#FFFFFF;"></div>
 
 <div style="width:800px; height:500px; margin:0 auto; background-color:#512DA8">
 	<div id="my_camera"></div>
@@ -86,14 +86,14 @@ jmalmstrom (Johanna Malmstrom)
 	function getHappinessLevel( image_url ) {
 
 		$.ajax({
-            url: "https://api.projectoxford.ai/emotion/v1.0/recognize",
-            beforeSend: function(xhrObj){
-                xhrObj.setRequestHeader("Content-Type","application/json");
-                xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","3ebc164263384c72a5ebc6ca559d27d8");
-            },
-            type: "POST",
-            data: "{ 'url':'"+image_url+"'}",
-	    	complete: function(response) {
+			url: "https://api.projectoxford.ai/emotion/v1.0/recognize",
+			beforeSend: function(xhrObj){
+				xhrObj.setRequestHeader("Content-Type","application/json");
+				xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","3ebc164263384c72a5ebc6ca559d27d8");
+			},
+			type: "POST",
+			data: "{ 'url':'"+image_url+"'}",
+			complete: function(response) {
 				obj = JSON.parse(response.responseText);
 				//alert(obj[0]["scores"]["happiness"]);
 				document.getElementById("player").src = "https://jixifox.files.wordpress.com/2015/09/netflix-and-chill-meme-comedy.jpg";
@@ -101,12 +101,12 @@ jmalmstrom (Johanna Malmstrom)
 				recordUser( obj[0]["scores"]["happiness"] );
 			}
 		})
-        .done(function(data) {
-            //alert("success");
-        })
-        .fail(function() {
-            alert("error");
-        });
+		.done(function(data) {
+			//alert("success");
+		})
+		.fail(function() {
+			alert("error");
+		});
 
 	}
 
@@ -120,24 +120,23 @@ jmalmstrom (Johanna Malmstrom)
 	function playNextVideo() {
 
 		$.ajax({
-	        url: "http://api.vidible.tv/search?bcid=55646e21e4b0683bc61d6119&query=kittens&offset=1&limit=5&transcript=false",
-	        type: "GET",
-		    complete: function(response) {
+			url: "http://api.vidible.tv/search?bcid=55646e21e4b0683bc61d6119&query=kittens&offset=1&limit=5&transcript=false",
+			type: "GET",
+			complete: function(response) {
 				obj = JSON.parse(response.responseText);
 				//alert(obj[0]["url"]);
 				//document.getElementById("player").style = "visibility: visible";
 				document.getElementById("player").src = obj[0]["url"];
 
 				setTimeout(take_snapshot, 10000);
-
 			}
 		})
-        .done(function(data) {
-            //alert("success");
-        })
-        .fail(function() {
-            alert("error");
-        });
+		.done(function(data) {
+			//alert("success");
+		})
+		.fail(function() {
+			alert("error");
+		});
 	}
 
 
@@ -151,11 +150,11 @@ jmalmstrom (Johanna Malmstrom)
 	function uploadToS3(data_uri) {
 		
 		var bucket = new AWS.S3({params: {Bucket: 'hackhers'}});
-	    var params = {Key: 'test.jpeg', ContentEncoding: 'base64', ContentType:'image/jpeg', Body: dataURItoBlob(data_uri)};
+		var params = {Key: 'test.jpeg', ContentEncoding: 'base64', ContentType:'image/jpeg', Body: dataURItoBlob(data_uri)};
 
 		bucket.upload(params, function (err, data) {
 
-				getHappinessLevel( data.Location );
+			getHappinessLevel( data.Location );
 
 		});
 
@@ -168,12 +167,12 @@ jmalmstrom (Johanna Malmstrom)
 
 	function dataURItoBlob(dataURI) {
 
-	    var binary = atob(dataURI.split(',')[1]);
-	    var array = [];
-	    for(var i = 0; i < binary.length; i++)
-	        array.push(binary.charCodeAt(i));
+		var binary = atob(dataURI.split(',')[1]);
+		var array = [];
+		for(var i = 0; i < binary.length; i++)
+			array.push(binary.charCodeAt(i));
 
-	 	return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
+		return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
 	 }
 
 
@@ -251,17 +250,17 @@ jmalmstrom (Johanna Malmstrom)
 			document.getElementById("netflixButton").style = "visibility: hidden";
 			document.getElementById("chillButton").style = "visibility: hidden";
 			document.getElementById("nicknameSpan").style = "visibility: hidden";
-
 			document.getElementById("chill").innerHTML = "super chill matching algorithm";
-
 			document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML 
 			+ "<br><br><div style='width:800px;'><div style='float:left'><img src='"+match.user1.image+"'/><br>"+match.user1.name+"<br>:) level: "+match.user1.happinessLevel+"</div><div style='margin-left:100px; float:left'><img src='"+match.user2.image+"'/><br>"+match.user2.name+"<br>:) level: "+match.user2.happinessLevel+"</div></div><br><br><br><br><br>";
 
 		});
 
+		document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML + "<br><br><br><br><br><br><br><br><br><br><br><br>";
+
 		users.forEach(function(user) {
 
-			document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML + "<br><br>"+user.name+"<br>:) level: "+user.happinessLevel+"<br><br>";
+			document.getElementById("chill").innerHTML = document.getElementById("chill").innerHTML +user.name+"(happinessLevel: "+user.happinessLevel+") ";
 
 		});
 
