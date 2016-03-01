@@ -17,6 +17,6 @@ microsoft-continuous-deployment
 verizon-vidible-answers-api
 
 #Try it out
-friendsfinder.azurewebsites.net/hackhers.html
+http://friendsfinder.azurewebsites.net/hackhers.html
 
 http://devpost.com/software/netflix-chill
